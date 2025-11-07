@@ -1,8 +1,8 @@
 ---
-title: "About the blog"
-image: profile.jpg
+title: "About"
+image: images/profile_pic.jpg
 about:
-  template: broadside
+  template: jolla
   links:
     - icon: linkedin
       text: LinkedIn
@@ -10,6 +10,9 @@ about:
     - icon: github
       text: Github
       href: https://github.com/jhackmeister
+    - icon: globe
+      text: BlueSky
+      href: //bsky.app/profile/jhackmeister.bsky.social
 ---
 
-This is my Seattle Torrent and PWHL blog.
+This is my Seattle Torrent and PWHL blog. I'll be playing with data from the PWHL and some of my favorite women's hockey writers and thinkers to help tell the story of the Torrent and their inaugural season.
