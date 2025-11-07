@@ -1,5 +1,5 @@
 ---
-title: "torrents_of_data"
+title: "Posts and Updates"
 listing:
   contents: posts
   sort: "date desc"

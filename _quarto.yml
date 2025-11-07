@@ -3,18 +3,17 @@ project:
   output-dir: docs
 
 website:
-  title: "torrents_of_data"
+  title: "Torrents of Data"
   navbar:
     right:
       - about.qmd
       - icon: github
-        href: https://github.com/
-      - icon: twitter
-        href: https://twitter.com
+        href: https://github.com/jhackmeister
+      - icon: globe
+        href: https://bsky.app/profile/jhackmeister.bsky.social
 format:
   html:
-    theme: cosmo
+    theme: Minty
     css: styles.css
 
 editor: visual
-
