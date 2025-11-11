@@ -10,3 +10,5 @@ listing:
 page-layout: full
 title-block-banner: true
 ---
+
+Welcome to Torrents of Data - a data focused look at Seattle's newest hockey team, the Seattle Torrent

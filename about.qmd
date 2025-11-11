@@ -13,6 +13,9 @@ about:
     - icon: globe
       text: BlueSky
       href: //bsky.app/profile/jhackmeister.bsky.social
+    - icon: envelope
+      text: Email
+      href: mailto:j_hackmeister@gmail.com
 ---
 
 This is my Seattle Torrent and PWHL blog. I'll be playing with data from the PWHL and some of my favorite women's hockey writers and thinkers to help tell the story of the Torrent and their inaugural season.

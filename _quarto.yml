@@ -11,9 +11,14 @@ website:
         href: https://github.com/jhackmeister
       - icon: globe
         href: https://bsky.app/profile/jhackmeister.bsky.social
+      - icon: envelope
+        href: mailto:j_hackmeister@gmail.com
+page-footer:
+    center: |
+      Torrents of Data · Built with [Quarto](https://quarto.org/)
+    background: "primary"
 format:
   html:
-    theme: Minty
-    css: styles.css
-
-editor: visual
+    theme: 
+      light: [cosmo, custom.scss]
+editor: visual 
