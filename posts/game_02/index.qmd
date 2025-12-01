@@ -1,0 +1,483 @@
+---
+title: "Home Opener"
+date: "2025-11-29"
+categories: [games, analysis]
+highlight-style: github
+code-fold: true
+code-summary: "Show code"
+---
+
+# Seattle is a hockey town - now even more! 
+
+![First Game at CPA](images/cpa.jpg)
+
+Somehow it felt like we've been waiting forever and that it all happened in the blink of an eye, but Friday was the first ever home game for the Seattle Torrent!
+
+There are so, so many good people involved with this team and the larger hockey community in Seattle and it was incredible to see them all in one place for this game! There has been a ton written about this game by some really good writers - and if you found this, I am sure you know who they are already but please go read them and support their work!
+
+I do want to quickly thank Zoe Harris of [Women's Pro Hockey Seattle](https://www.womensprohockeyseattle.com/) for all the work she has done in building momentum that culminated with the launch of the Torrent. I was lucky enough to meet Zoe in early (pre-COVID) 2020 when she hosted a watch party for the Women's Worlds in Seattle. I didn't really know anyone in the group then, but looking at his picture 5 and half years later, it is incredible to see the friends that I have made from that group. Zoe has worked so hard to get Seattle ready for this moment, and I feel extremely fortunate to have watched her work.
+
+![](images/clipboard-3630945565.png)
+
+It was very gratifying to see her with [this sign](https://bsky.app/profile/wphseattle.bsky.social/post/3m6pcoqqpcc2l) throughout the game!
+
+![](images/clipboard-3301692878.png)
+
+A lot of people did a lot of work to make this team happen, but none of it happens without her.
+
+## Getting Into It
+
+There was a lot of pomp and circumstance around this game, just as there should be - but eventually, there was a game to be played.
+
+After falling in OT to Vancouver in game 1, I didn't expect major lineup changes for the Torrent. Among the forward group, there were no changes to any of the lines at the start of the game. Although we did see some mixing and matching as the team looked for offense later in the game.
+
+[![Thanks again to Circling Seattle Sports for the lineup graphic](images/css_lineup.jpg)](https://bsky.app/profile/circlingseasports.bsky.social)
+
+```{r}
+#| label: setup and API calls
+#| message: false
+#| warning: false
+library(httr)
+library(jsonlite)
+library(stringr)
+library(tidyverse)
+library(ggrepel)
+library(datapasta)
+library(gt)
+
+# Torrent game 02 vs Minn - PWHL game 216
+
+# PxP data
+url <- "https://lscluster.hockeytech.com/feed/index.php?feed=gc&tab=pxpverbose&game_id=216&key=446521baf8c38984&client_code=pwhl"
+response <- GET(url)
+data_json <- content(response, "text")
+data_list <- fromJSON(data_json, flatten = TRUE)
+
+game_data <- data_list$GC$Pxp
+
+# Game Summary - check home and vistor lables in call 
+url <- "https://lscluster.hockeytech.com/feed/index.php?feed=gc&tab=gamesummary&game_id=216&key=446521baf8c38984&client_code=pwhl"
+response <- GET(url)
+data_json <- content(response, "text")
+data_list <- fromJSON(data_json, flatten = TRUE)
+opp_summary <- data_list$GC$Gamesummary$visitor_team_lineup$players
+sea_summary <- data_list$GC$Gamesummary$home_team_lineup$players
+
+# boxscore data from https://www.thepwhl.com/en/stats/game-center/216
+sea_box <- tibble::tribble(             ~`num`,       ~`name`,  ~`pos`, ~`G`, ~`A`, ~`pim`, ~`shots`, ~`TOI`,  ~`fo`, ~`hits`, ~`plusmin`,
+             3L,       "Barnes,Cayla",  "RD", 0, 0, 0, 1, "26:13",  "0/0", 0, -1,
+               5L,        "Wilgren, Anna", "RD",   0L,   0L,   0L,   3L,  "20:38",   "0/0",   1L,   -1L,
+               8L,   "Snodgrass, Natalie", "RW",   0L,   0L,   0L,   0L,  "12:36",   "0/0",   0L,   -1L,
+               9L,     "Eldridge, Jessie", "RW",   0L,   0L,   0L,   1L,  "18:08",   "0/0",   0L,   -1L,
+              10L,      "Buglioni, Jenna",  "C",   0L,   0L,   0L,   0L,   "5:32",   "0/4",   0L,    0L,
+              11L,         "Brown, Emily", "LD",   0L,   0L,   0L,   0L,  "19:52",   "0/0",   1L,    0L,
+              13L, "Grant-Mentis, Mikyla",  "C",   0L,   0L,   0L,   1L,  "13:18",  "6/12",   1L,   -1L,
+              17L,       "Bryant, Brooke", "RW",   0L,   0L,   0L,   2L,   "3:58",   "0/0",   0L,    0L,
+              19L,        "Bilka, Hannah", "LW",   0L,   0L,   0L,   3L,  "19:53",   "0/1",   0L,   -1L,
+              20L,      "Keopple, Mariah", "LD",   0L,   0L,   0L,   0L,  "15:06",   "0/0",   0L,   -1L,
+              21L,       "Knight, Hilary", "RW",   0L,   0L,   0L,   5L,  "23:23",   "0/0",   0L,    0L,
+              24L,      "Lobdell, Lyndie", "RD",   0L,   0L,   0L,   1L,  "12:54",   "0/0",   1L,   -1L,
+              25L,      "Carpenter, Alex",  "C",   0L,   0L,   0L,   5L,  "22:32", "19/24",   0L,    0L,
+              27L,        "Carter, Megan", "LD",   0L,   0L,   2L,   0L,  "16:44",   "0/0",   0L,    0L,
+              66L,        "Wagner, Marah", "LW",   0L,   0L,   0L,   0L,   "5:37",   "0/0",   0L,    0L,
+              78L,        "Adzija, Lexie", "LW",   0L,   0L,   2L,   2L,  "13:27",   "0/0",   0L,   -1L,
+              88L,       "Gosling, Julia", "LW",   0L,   0L,   2L,   5L,  "22:17",   "0/0",   0L,    0L,
+              92L,  "Serdachny, Danielle",  "C",   0L,   0L,   2L,   1L,  "19:05",  "8/16",   1L,   -1L
+             )
+
+
+# clean the box score
+sea_box <- sea_box %>%
+  select(-all_of(ncol(sea_box))) %>%
+  mutate(toi = ms(TOI),
+         on_ice_min = round(as.numeric(toi, "minutes"), 2)) %>%
+  arrange(desc(on_ice_min))
+
+
+```
+
+```{r}
+#| label: TOI-Plot
+#| message: false
+#| warning: false
+# TOI plot 
+
+p <- sea_box %>% 
+  filter(pos %in% c("C", "RW", "LW")) %>% 
+  ggplot(aes(x = reorder(name, on_ice_min), y = on_ice_min)) +
+  geom_col(fill = "#074F51", color = "#6098AE", linewidth = 1) +
+  coord_flip() +
+  labs(title = "Torrent Ice Time",
+       subtitle = "Forwards",
+       x = "", y = "") +
+  theme_classic() +
+  theme( plot.title = element_text(color = "#074F51", size = 16, face = "bold")
+  )
+print(p)
+
+```
+
+The ice time allotments did see a change, as the top 6 took a bigger chunk in this game. The Gosling, Carpenter, Knight line lead the way, with Bilka, Serdachny, and Eldridge not far behind. The third line of Adzija, Grant-Mentis, and Snodgrass saw their minutes drop as Coach O'Rourke leaned more on his top six to drive offense. And while they ended up being shut out in this game, I think that group showed quite a bit of promise in the offensive zone once again. The fourth line of Wagner, Buglioni, and Bryant trailed behind the other groups as they all continue to grow into their roles on the team.
+
+On defense, the injury to Aneta Tejarlova, meant a shakeup of the defensive pairs. Emily Brown moved up to the top pair with Cayla Barnes while Mariah Keopple slotted in with Anna Wilgren. The third pair saw Megan Carter joined by Lyndie Lobdell, who made her Torrent debut.
+
+```{r}
+sea_box %>% 
+  filter(pos %in% c("D", "RD", "LD")) %>% 
+  ggplot(aes(x = reorder(name, on_ice_min), y = on_ice_min)) +
+  geom_col(fill = "#074F51", color = "#6098AE", linewidth = 1) +
+  coord_flip() +
+  labs(title = "Torrent Ice Time",
+       subtitle = "Defenders",
+       x = "", y = "") +
+  theme_minimal() +
+  theme( plot.title = element_text(color = "#074F51", size = 16, face = "bold")
+  )
+```
+
+The ice time distribution is pretty much exactly what you'd expect given the pairings. Cayla Barnes led the way - she also saw time on both the power play and PK units - while Lobdell saw the least playing time.
+
+### Final Horn 
+
+With all the energy in the building, the Torrent came out of the gates with several good looks at the net and a lot of offensive zone time. A theme of the game was their inability to turn that possession time into goals as the Minnesota defense did a great job keeping sight lines clear for Nicole Hensley. From start to finish, this was a physical game but Seattle was never able to take control and impose their style on Minnesota. The Frost very much looked like the more experienced team and took advantage of the small mistakes made by Seattle. When the final horn sounded, the Frost skated off with a 3 goal victory and their first 3 points of the season.
+
+Despite the 0-3 score, Seattle out shot and and out qualitied (new word alert) the Frost in this game. This matches what we saw during the game, Seattle had long stretches of possession and were able to get shots on Nicole Hensley, especially in the 3rd period when they were pressing for a goal but were never able to get past the Team USA netminder.
+
+```{r}
+#| message: false
+#| warning: false
+
+# Summarize shots by period and team
+shots_period <- game_data %>%
+  filter(event == "shot") %>%
+  select(player.team_code, period_id) %>%
+  group_by(period_id, player.team_code) %>%
+  summarise(shot_total = n(), .groups = "drop")
+
+# Pivot wider: teams as columns
+shots_wide <- shots_period %>%
+  pivot_wider(names_from = player.team_code, values_from = shot_total, values_fill = 0)
+
+# Create GT table
+shots_wide %>%
+  gt() %>%
+  tab_header(
+    title = "Shots by Period",
+    subtitle = "Team Comparison"
+  ) %>%
+  cols_label(
+    period_id = "Period"
+    # Team columns will keep their names (e.g., SEA, MIN)
+  ) %>%
+  fmt_number(columns = everything(), decimals = 0) %>%
+  tab_style(
+    style = cell_text(weight = "bold"),
+    locations = cells_column_labels(everything())
+  )
+
+
+```
+
+```{r}
+# set colors
+shot_colors <- c("#6098AE","#b7b7b7", "#074F51","#dad5c2")
+
+# Team shot quality
+shots_data <- game_data %>% 
+  filter(event == "shot") %>% 
+  select(player.team_code, period_id, time_formatted, x_location, y_location, shot_quality_description, shot_type_description, player.last_name, player.first_name) 
+
+team_shots <- shots_data %>% 
+  group_by(player.team_code, shot_quality_description) %>% 
+  summarise(total_shots = n(), .groups = "drop")
+
+team_totals <- team_shots %>% 
+  group_by(player.team_code) %>% 
+  summarise(team_total = sum(total_shots))
+
+ggplot(team_shots, aes(x = factor(player.team_code), y = total_shots, fill = shot_quality_description)) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = total_shots),
+            position = position_stack(vjust = 0.5),
+            color = "white", size = 3) +
+  geom_text(data = team_totals,
+            aes(x = factor(player.team_code), y = team_total + 5, label = paste("Total:", team_total)),
+            inherit.aes = FALSE,
+            fontface = "bold", size = 4) +
+  scale_fill_manual(values = shot_colors) +
+  labs(title = "Shot Quality by Team",
+       x = "",
+       y = "",
+       fill = "Shot Quality") +
+  theme_minimal()
+```
+
+Seattle struggled to get traffic in front of Hensley for many of these chances. A good shot from a dangerous place on the ice, is still a relatively easy save for a world class goalie when they can see it clean off the stick.
+
+Looking at individual shot contributions, the line of Gosling, Carpenter, and Knight lead the way with each player registering 5 shots on net. They generated chances throughout the night and had several close calls. I was also really impressed by Hannah Bilka's game in this one, she had 3 shots and found time on the PP and in the eventual 6 on 5 situation.
+
+```{r}
+player_shots <- shots_data %>% 
+  group_by(player.team_code, player.last_name, shot_quality_description)%>% 
+  summarise(total_shots = n(), .groups = "drop")
+
+player_shots %>% 
+  filter(player.team_code == "SEA") %>% 
+  ggplot(aes(x=player.last_name, y = total_shots, fill = shot_quality_description)) +
+  geom_bar(stat = "identity", color = "black", linewidth = 0.5) +
+   scale_fill_manual(values = shot_colors) +
+    labs(title = "Shot Quality by Torrent Players",
+       x = "",
+       y = "",
+       fill = "Shot Quality") +
+  theme_classic()+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+For the Frost, their big names stepped up in this game. After [dropping their home opener to Toronto](https://www.thepwhl.com/en/stats/game-summary/210), they came out with a chip on their shoulder and it showed throughout the game. Grace Zumwinkle and Kendall Coyne-Schofield led the way with 4 shots each. Kelly Pannek had the first two goals and Zumwinkle got the final goal on a third period powerplay opportunity.
+
+```{r}
+player_shots %>% 
+  filter(player.team_code == "MIN") %>% 
+  ggplot(aes(x=player.last_name, y = total_shots, fill = shot_quality_description)) +
+  geom_bar(stat = "identity", color = "black", linewidth = 0.5) +
+   scale_fill_manual(values = c("#9E7DB8","#262160", "#FFFFFF", "darkgray")) +
+    labs(title = "Shot Quality by Frost Players",
+       x = "",
+       y = "",
+       fill = "Shot Quality") +
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+## Physicality
+
+After the Torrent convincingly won the physicality battle in Vancouver, I was surprised to see how well Minnesota brought that style of play into Seattle. Again, hits aren't everything - especially in the PWHL - but Minnesota out hitting the Torrent 13-5 was a surprise.
+
+```{r}
+torrent_hits <- sum(as.numeric(sea_summary$hits))
+
+sea_summary <- sea_summary %>%
+  mutate(hits = as.numeric(hits))
+
+sea_summary %>% 
+  filter(hits >= 1) %>% 
+ggplot(aes(x = last_name, y = hits)) +
+  geom_col(fill = "#074F51", color = "#6098AE", linewidth = 1)+
+  scale_y_continuous(expand = expansion(mult = c(0, 1))) +  # starts at 0
+  theme_minimal()+
+  labs(
+    title = paste("Torrent Hits (Total:", torrent_hits, ")"),
+    x ="", y=""
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+```{r}
+opp_hits <- sum(as.numeric(opp_summary$hits))
+
+opp_summary <- opp_summary %>%
+  mutate(hits = as.numeric(hits))
+
+opp_summary %>% 
+  filter(hits >= 1) %>% 
+ggplot(aes(x = last_name, y = hits)) +
+  geom_col(color = "#7756A9ff", fill = "#220256", linewidth = 0.8)+
+  theme_minimal()+
+  labs(
+    title = paste("Frost Hits (Total:", opp_hits, ")"),
+    x ="", y=""
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+In the arena, you could feel the temperature rising throughout this game. Minnesota played the type of game we'd hope to see from Seattle, and the Torrent didn't always have an answer.
+
+```{r}
+#| label: team_pims
+#| message: false
+#| warning: false
+# penalties 
+pims <- game_data %>%
+  group_by(player_penalized_info.team_code) %>%
+  summarise(pims = sum(as.numeric(minutes), na.rm = TRUE), .groups = "drop") %>% 
+  filter(pims >= 1) %>% 
+  rename(team = player_penalized_info.team_code) %>% 
+  mutate(total_penalties = sum(pims),
+         proportion = pims / total_penalties)
+
+
+ggplot(pims, aes(x = "Total", y = pims, fill = team)) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = c("#9E7DB8", "#074F51")) +
+  coord_flip() +
+  labs(title = "Total Penalty Minutes",
+       x = "",
+       y = "") +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+
+```
+
+Looking at the penalties, thing were called fairly evenly, but the home crowd felt a lot was missed in Minnesota's favor. Hilary Knight was [asked about it after the game](https://www.youtube.com/watch?v=eYYPcBt1jUk) and seemed to downplay the concern, but this is something to keep an eye on going forward - especially in the next match up between these two teams.
+
+## Up Next
+
+After a frustrating end to an incredible day at CPA, the Torrent have to wait until Wednesday for their next game, when they welcome the New York Sirens to the PNW.
+
+The Sirens are off to a hot start, with impressive wins over Ottawa and Vancouver already (they were also shut out 0-4 in Montreal). They've scored 9 goals and only given up 5 so far in those three games. After finishing in last place each of the first two seasons, the Sirens are hoping to right the ship and contend for one of four playoff spots in 2025-26. Meanwhile, the Torrent will be looking to rebound after a disappointing home opener, to get their first win, and to get their first goal at Climate Pledge Arena!
+
+Here is a look at the standings as of Sunday night. Boston and New York lead the way with 6 points while the rest of the Inaugural 6 are tied at 3, followed by the expansion teams of Vancouver at 2 (after two lopsided losses on the road) and Seattle with the 1 point earned in the OT loss to the Goldeneyes.
+
+```{r}
+#| label: cummumlative-points
+#| message: false
+#| warning: false
+
+#| message: false
+#| warning: false
+
+url <- "https://lscluster.hockeytech.com/feed/?feed=modulekit&view=schedule&season_id=8&key=446521baf8c38984&client_code=pwhl"
+
+response <- GET(url)
+data_json <- content(response, "text")
+data_list <- fromJSON(data_json, flatten = TRUE)
+
+
+# Extract schedule
+schedule <- as.data.frame(data_list$SiteKit$Schedule)
+
+# Clean column names
+schedule <- schedule %>% 
+  janitor::clean_names() %>% 
+  select(game_id, date_played, home_team_code, home_goal_count, visiting_team_code,
+         visiting_goal_count, period, overtime, shootout, attendance, venue_name, notes_text) %>% 
+  filter(attendance > 1) # keep only games played
+
+calculate_points_tidyverse <- function(df) {
+  df %>%
+    mutate(
+      # Convert numeric to logical
+      ot_flag = as.logical(as.numeric(overtime)),
+      so_flag = as.logical(as.numeric(shootout)),
+      
+      # Replace NA with FALSE
+      ot_flag = replace_na(ot_flag, FALSE),
+      so_flag = replace_na(so_flag, FALSE),
+      
+      # Determine if home team won
+      home_win = home_goal_count > visiting_goal_count,
+      
+      # Calculate points
+      home_points = case_when(
+        home_win & !ot_flag & !so_flag ~ 3,
+        home_win & (ot_flag | so_flag) ~ 2,
+        !home_win & !ot_flag & !so_flag ~ 0,
+        !home_win & (ot_flag | so_flag) ~ 1,
+        TRUE ~ NA_real_
+      ),
+      
+      away_points = case_when(
+        !home_win & !ot_flag & !so_flag ~ 3,
+        !home_win & (ot_flag | so_flag) ~ 2,
+        home_win & !ot_flag & !so_flag ~ 0,
+        home_win & (ot_flag | so_flag) ~ 1,
+        TRUE ~ NA_real_
+      )
+    ) %>%
+    select(-ot_flag, -so_flag, -home_win)
+}
+
+schedule_w_points <- calculate_points_tidyverse(schedule)
+
+
+# PWHL Cumulative Points Chart by Games Played
+
+# Function to calculate cumulative points by games played
+calculate_cumulative_standings <- function(schedule_w_points) {
+
+  # Option 1: If you have a date column (adjust column name as needed)
+  if("date_played" %in% names(schedule_w_points) || "date_played" %in% names(schedule_w_points)) {
+    schedule_sorted <- schedule_w_points %>%
+      arrange()  # or arrange(game_date)
+  } 
+  
+  # Process home team results
+  home_results <- schedule_sorted %>%
+    select(team = home_team_code, 
+           points = home_points,
+           game_id) %>%  # Keep game_id for ordering
+    arrange(game_id)
+  
+  # Process away team results  
+  away_results <- schedule_sorted %>%
+    select(team = visiting_team_code,
+           points = away_points,
+           game_id) %>%
+    arrange(game_id)
+  
+  # Combine all results
+  all_results <- bind_rows(home_results, away_results) %>%
+    arrange(game_id) %>%
+    group_by(team) %>%
+    mutate(
+      game_number = row_number(),
+      cumulative_points = cumsum(points)
+    ) %>%
+    ungroup()
+  
+  return(all_results)
+}
+
+ytd_schedule <- calculate_cumulative_standings(schedule_w_points)
+
+team_colors <- c(
+  "BOS" = "#183F35",
+  "MIN" = "#262160", 
+  "MTL" = "#862836",
+  "NY" = "#00B9B3",
+  "OTT" = "#A61D31",
+  "TOR" = "#1468B3",
+  "SEA" = "#074F51", 
+  "VAN" = "#af6c45"
+)
+
+# Get the last point for each team for labeling
+label_data <- ytd_schedule %>%
+  group_by(team) %>%
+  filter(game_number == max(game_number)) %>%
+  ungroup()
+
+ggplot(ytd_schedule, aes(x=game_number, y = cumulative_points,
+                         color = team, group = team)) +
+  geom_line(linewidth = 1.3)+
+  geom_text_repel(data = label_data,
+            aes(label = team),
+            nudge_x = 0.2,
+            hjust = 0,
+            segment.size = 0.2,
+            segment.alpha = 0.5,
+            size = 4) +
+  scale_color_manual(values = team_colors, name = "team", guide = "none") +
+  scale_x_continuous(
+    breaks = seq(0, max(ytd_schedule$game_number), by = 1)) +
+  labs(
+    title = "2025-26 PWHL Standings",
+    x = "Games Played",
+    y = "Cumulative Points"
+  ) +
+  theme_minimal()
+
+```
+
+## One Last Thing
+
+A huge thank you to the Torrent staff for hosting the [Sno-King Girls](https://snokinghockey.com/club/girlshockey) for the home opener. As a coach in the program, it was very gratifying seeing so many Sno-King jerseys in the crowd. I loved the number of "Coach Marah" signs for [former Sno-King player Marah Wagner](https://www.instagram.com/p/DRsPKr4khML/?hl=en&img_index=1). The girls in our program are so excited to see her on the ice and to cheer her on this season. After the game, all Sno-King players (and the other girls teams in town for the 10U Thanksgiving Weekend Tournament) were invited onto the ice for a massive group photo!
+
+![Sno-King Jr. Thunderbirds](images/sno-king.jpg)
+
+The growth of girls hockey around the country and specifically here in western Washington has been awesome to watch and be a part of, and it will only get bigger with the Torrent providing local inspiration!
+
+Thank you for reading this far, I'd love to know what you think - find me on [BlueSky](https://bsky.app/profile/jhackmeister.bsky.social) and let's talk Torrent!

@@ -18,8 +18,6 @@ about:
       href: mailto:j_hackmeister@gmail.com
 ---
 
-This is my Seattle Torrent and PWHL blog. I'll be playing with data from the PWHL and some of my favorite women's hockey writers and thinkers to help tell the story of the Torrent and their inaugural season.
-
 My goal for this project is to use data to help tell the story of both the Torrent and the PWHL this season. I am a huge admirer of [Alison Lukan](https://bsky.app/profile/alisonl.bsky.social) and her data driven story telling approach. I won't pretend to be in the same universe as Alison, but I am certainly inspired by her work.
 
-I have been very lucky to have found [Isabelle Lefebvre on Github](https://github.com/IsabelleLefebvre97), who has provide very helpful documentation for the hockeytech API being used by the league, her PWHL Data Reference repo has been an incredible resource for this project.
+I have been very lucky to have found [Isabelle Lefebvre on Github](https://github.com/IsabelleLefebvre97), who has provide very helpful documentation for the hockerytech API being used by the league, her PWHL Data Reference repo has been an incredible resource for this project.
